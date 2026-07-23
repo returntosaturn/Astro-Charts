@@ -6,7 +6,7 @@ import ChartReport from '@/components/ChartReport';
 import SavedCharts from '@/components/SavedCharts';
 import { calculateChart, type BirthChart } from '@/astro/calculate';
 import { ZODIAC_SIGNS } from '@/astro/zodiac';
-import { supabase, type SavedChart } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, type SavedChart } from '@/lib/supabase';
 
 interface ActiveChart {
   chart: BirthChart;
@@ -41,6 +41,10 @@ function App() {
 
   const handleSave = async () => {
     if (!active) return;
+    if (!isSupabaseConfigured || !supabase) {
+      setError('Saving requires Supabase. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to a .env file to enable it. The chart below is fully generated offline.');
+      return;
+    }
     setSaving(true);
     const { data, error: saveError } = await supabase
       .from('birth_charts')

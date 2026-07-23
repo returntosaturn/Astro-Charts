@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Trash2, Clock, Calendar, MapPin, Star } from 'lucide-react';
-import { supabase, type SavedChart } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, type SavedChart } from '@/lib/supabase';
 import { ZODIAC_SIGNS } from '@/astro/zodiac';
 
 interface Props {
@@ -17,6 +17,12 @@ export default function SavedCharts({ onSelect, refreshKey, currentId }: Props) 
     let cancelled = false;
     (async () => {
       setLoading(true);
+      if (!isSupabaseConfigured || !supabase) {
+        // No Supabase configured (e.g. Codespaces / local without .env):
+        // show empty state, no network call.
+        if (!cancelled) setLoading(false);
+        return;
+      }
       const { data, error } = await supabase
         .from('birth_charts')
         .select('*')
@@ -31,6 +37,7 @@ export default function SavedCharts({ onSelect, refreshKey, currentId }: Props) 
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!isSupabaseConfigured || !supabase) return;
     await supabase.from('birth_charts').delete().eq('id', id);
     setCharts((prev) => prev.filter((c) => c.id !== id));
   };
